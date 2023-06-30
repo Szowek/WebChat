@@ -1,0 +1,68 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Home page";
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Web chat</title>
+</head>
+<body>
+    <h1>Web client</h1>
+    <br />
+
+    <input type="text" placeholder="Podaj swój nick" id="nicknameInput" />
+    <input type="text" placeholder="Podaj swoją wiadomość" id="messageToSend" />
+    <button id="sendButton">Wyślij</button>
+    <ul id="messages"></ul>
+
+    <script type="text/javascript">
+        var uri = "ws://localhost:5000/ws";
+        function connect() {
+            socket = new WebSocket(uri);
+            socket.onopen = function (e) {
+                console.log("Nawiazano polaczenie");
+            };
+            socket.onclose = function (e) {
+                console.log("Przerwano polaczenie");
+            };
+            socket.onmessage = function (e) {
+                appendItem(list, e.data);
+                console.log(e.data);
+                }
+            };
+        connect();
+        var list = document.getElementById("messages");
+        var button = document.getElementById("sendButton");
+        button.addEventListener("click", function () {
+            var sendMessage = function (element) {
+                var message = document.getElementById("messageToSend").value;
+                var nickname = document.getElementById("nicknameInput").value;
+                var fullMessage = nickname ? `${nickname}: ${message}` : `Unknown: ${message}`;
+                console.log("Wysylanie wiadomosci...");
+                socket.send(fullMessage);
+                document.getElementById("nicknameInput").disabled = true;
+            };
+            var message = document.getElementById("messageToSend").value;
+            sendMessage(message);
+        })
+
+
+        function appendItem(list, message) {
+            var separatorIndex = message.indexOf(":");
+            var nickname = message.substring(0, separatorIndex).trim();
+            var text = message.substring(separatorIndex + 1).trim();
+            var item = document.createElement("li");
+            item.appendChild(document.createTextNode(nickname + ": " + text));
+            if (text.startsWith("Nick jest juz zajety, wybierz inny.")) {
+                document.getElementById("nicknameInput").disabled = false;
+            }
+            list.appendChild(item);
+        }
+
+    </script>
+</body>
+</html>
